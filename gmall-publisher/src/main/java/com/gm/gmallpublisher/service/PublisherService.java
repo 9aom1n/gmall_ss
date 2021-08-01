@@ -12,4 +12,10 @@ public interface PublisherService {
      public int getDauTotal(String date);
     // 获取分时数据抽象方法
     public Map getDauHour(String date);
+
+    //获取Gmv每日总数的抽象方法
+    public Double getOrderAmountTotal(String date);
+
+    //获取GMV 每日交易额分时数据
+    public Map<String , Double> getOrderAmountHourMap(String date);
 }
