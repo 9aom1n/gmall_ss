@@ -10,7 +10,7 @@ import com.gm.handler.DauHandler
 import com.gm.utils.MyKafkaUtil
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.spark.SparkConf
+import org.apache.spark.{SparkConf, rdd}
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.phoenix.spark._
@@ -67,9 +67,9 @@ object DauApp {
     DauHandler.saveToRedis(filterByGroupDStream)
 
     //8.将最终明细数据保存到Hbase中
-    filterByGroupDStream.foreachRDD(rdd=>{
-      rdd.saveToPhoenix("GMALL2021_DAU",
-        Seq("MID", "UID", "APPID", "AREA", "OS", "CH", "TYPE", "VS", "LOGDATE", "LOGHOUR", "TS"),
+      filterByGroupDStream.foreachRDD(rdd=>{
+        rdd.saveToPhoenix("GMALL2021_DAU",
+          Seq("MID", "UID", "APPID", "AREA", "OS", "CH", "TYPE", "VS", "LOGDATE", "LOGHOUR", "TS"),
         HBaseConfiguration.create,
         Some("hadoop102,hadoop103,hadoop104:2181")
       )
