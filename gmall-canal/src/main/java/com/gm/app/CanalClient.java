@@ -71,30 +71,41 @@ public class CanalClient {
         }
     }
 
-        /**
-         * 用来具体解析数据
-         * @param tableName
-         * @param eventType
-         * @param rowDatasList
-         */
-        private static void handler (String tableName, CanalEntry.EventType
-        eventType, List < CanalEntry.RowData > rowDatasList){
-            //1.根据表名以及所需要的新增或者变化的条来决定取什么数据
-            if ("order_info".equals(tableName) && CanalEntry.EventType.INSERT.equals(eventType)) {
-                //2.获取每一行数据
-                for (CanalEntry.RowData rowData : rowDatasList) {
-                    //3.获取更新之后的数据
-                    List<CanalEntry.Column> afterColumnsList = rowData.getAfterColumnsList();
-                    //4.获取每一列数据
-                    JSONObject jsonObject = new JSONObject();
-                    for (CanalEntry.Column column : afterColumnsList) {
-                        jsonObject.put(column.getName(), column.getValue());
-                    }
-                    System.out.println(jsonObject.toString());
-                    //5.发送数据到kafka
-                    MyKafkaSender.send(GmallConstants.KAFKA_TOPIC_ORDER, jsonObject.toString());
-                }
-            }
+    /**
+     * 用来具体解析数据
+     *
+     * @param tableName
+     * @param eventType
+     * @param rowDatasList
+     */
+    private static void handler(String tableName, CanalEntry.EventType
+            eventType, List<CanalEntry.RowData> rowDatasList) {
+        //1.根据表名以及所需要的新增或者变化的条来决定取什么数据
+        //TODO 获取订单表的新增数据
+        if ("order_info".equals(tableName) && CanalEntry.EventType.INSERT.equals(eventType)) {
+            saveToKafka(rowDatasList, GmallConstants.KAFKA_TOPIC_ORDER);
+            //TODO 获取订单明细表新增数据
+        } else if ("order_detail".equals(tableName) && CanalEntry.EventType.INSERT.equals(eventType)) {
+            saveToKafka(rowDatasList, GmallConstants.KAFKA_TOPIC_ORDER_DETAIL);
+            //TODO 获取用户表的新增及变化
+        } else if ("user_info".equals(tableName) && (CanalEntry.EventType.INSERT.equals(eventType) || CanalEntry.EventType.UPDATE.equals(eventType))) {
+            saveToKafka(rowDatasList, GmallConstants.KAFKA_TOPIC_USER_INFO);
         }
+    }
 
+    private static void saveToKafka(List<CanalEntry.RowData> rowDatasList, String kafkaTopicOrder) {
+        //2.获取每一行数据
+        for (CanalEntry.RowData rowData : rowDatasList) {
+            //3.获取更新之后的数据
+            List<CanalEntry.Column> afterColumnsList = rowData.getAfterColumnsList();
+            //4.获取每一列数据
+            JSONObject jsonObject = new JSONObject();
+            for (CanalEntry.Column column : afterColumnsList) {
+                jsonObject.put(column.getName(), column.getValue());
+            }
+            System.out.println(jsonObject.toString());
+            //5.发送数据到kafka
+            MyKafkaSender.send(kafkaTopicOrder, jsonObject.toString());
+        }
+    }
 }
